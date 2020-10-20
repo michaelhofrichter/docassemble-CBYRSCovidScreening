@@ -1,0 +1,208 @@
+metadata:
+  title: COVID Health Screening
+  short title: COVID Screening
+  comment: |
+    Images are used witha  Creative Commons license - CC-BY-SA
+    from Emoji One / CC BY-SA (https://creativecommons.org/licenses/by-sa/4.0)
+    https://commons.wikimedia.org/wiki/File:Eo_circle_green_checkmark.svg
+    https://commons.wikimedia.org/wiki/File:Eo_circle_red_letter-x.svg
+---
+modules:
+  - .google_sheets
+---
+features:
+  progress bar: true
+  progress bar multiplier: .125
+---
+code: |
+  screenee.name
+  results
+comment: | 
+ '  'if the_task.ready():
+ '  '  results
+ '  'else:
+ '  ''  waiting_screen
+
+  
+mandatory: true
+---
+objects: 
+  screenee: Individual
+  student: Individual
+---
+code: | 
+  todaysdate = today(format='M/d/YYYY') 
+  todaystime = current_datetime().format_time('h:mm a z')  
+  if len(symptoms.true_values()) != 0:
+    visual_result = "red"
+    appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, "Blank", comma_and_list(symptoms.true_values()), "Blank", "Blank", "Blank", screenee.position, student.name.first, student.name.last]
+    the_task = background_action('bg_task')
+  else:
+    if household_contact_with_symptoms:
+      visual_result = "red"
+      appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, "Blank", "None", household_contact_with_symptoms, "Blank", "Blank", screenee.position, student.name.first, student.name.last]
+      the_task = background_action('bg_task')
+    else:
+      if lab_test_positive:
+        visual_result = "red"
+        appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, "Blank", "None", household_contact_with_symptoms, lab_test_positive, "Blank", screenee.position, student.name.first, student.name.last]
+        the_task = background_action('bg_task')
+      else:
+        if travel_restriction:
+          visual_result = "red"
+          appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, "Blank", "None", household_contact_with_symptoms, lab_test_positive, travel_restriction, screenee.position, student.name.first, student.name.last]
+          the_task = background_action('bg_task')
+        else:
+          if current_temperature == "high":
+            visual_result = "red"
+            appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, temperature, "None", household_contact_with_symptoms, lab_test_positive, travel_restriction, screenee.position, student.name.first, student.name.last]
+            the_task = background_action('bg_task')
+          else:
+            visual_result = "green"
+            appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, temperature, "None", household_contact_with_symptoms, lab_test_positive, travel_restriction, screenee.position, student.name.first, student.name.last]
+            the_task = background_action('bg_task')
+---
+code: | 
+  if temperature > 100.2:
+    current_temperature = "high"
+  else:
+    current_temperature = "low"
+---
+event: bg_task
+code: |
+  # This is where time-consuming code
+  # would go.
+  
+  append_to_sheet('CBY RS - COVID-19 Screening Responses from Docassemble', appending_data)
+  data_stored_in_google_sheet = True
+  
+---
+image sets:
+  emojione:
+    attribution: |
+      Icon made by
+      [Emoji One](https://commons.wikimedia.org/wiki/File:Eo_circle_red_letter-x.svg)
+    images:
+      red_x: Eo_circle_red_letter-x.svg
+      green_check: GreenCheckmark.svg
+---
+images: 
+  malev: logo_cropped.jpg
+---
+decoration: malev
+question: |
+  William S. Malev Schools for Religious Studies of Congregation Beth Yeshurun
+subquestion: | 
+  ## COVID-19 Health Attestation Form
+fields:
+  - First Name: screenee.name.first
+  - Last Name: screenee.name.last
+  - Staff, Student, or Parent: screenee.position
+    choices: 
+      - Staff
+      - Student
+      - Parent
+  - Student First Name: student.name.first
+    show if: 
+      variable: screenee.position
+      is: Parent
+  - Student Last Name: student.name.last
+    show if: 
+      variable: screenee.position
+      is: Parent
+progress: 14.2
+---
+question: | 
+  Temperature
+fields: 
+  - Please record your temperature for the day in Fahrenheit: temperature
+    datatype: number
+    step: 0.1
+    min: 95.0
+progress: 85.8
+---
+question: Results
+subquestion: |
+
+  <center>
+  % if visual_result == "red":
+  [FILE red_x, 75%]
+  % elif visual_result == "green":
+  [FILE green_check, 75%]
+  % else:
+  Please retake this as there seems to have been an error.
+  % endif
+  
+  **Thank you!**
+  
+  ### ${ screenee } 
+  
+  #### ${ today(format='M/d/YYYY') }
+  
+  % if visual_result == "green":
+  Your Health Attestation form has been received and approved. 
+  
+  Please screenshot this page to show the school.
+  % elif visual_result == "red":
+  Your Health Attestation form has been received. Today you are not cleared to visit the school. 
+  % endif
+  
+  </center>
+  
+event: results
+buttons:
+  - Restart: restart
+  - Exit: exit
+    url: https://bethyeshurun.org
+progress: 100
+---
+event: waiting_screen
+question: |
+  Hang tight.
+  Still waiting for the data to submit.
+subquestion: |
+  This screen will reload every
+  ten seconds until the data is submitted.
+reload: True
+progress: 95
+---
+question: Symptoms
+subquestion: | 
+  In the past 24 hours, has anyone in your household experienced any of the following? Select all that apply. 
+fields:
+  - no label: symptoms
+    datatype: checkboxes
+    choices:
+      - Cough
+      - Shortness of breath or difficulty breathing
+      - Chills
+      - Repeated shaking with chills
+      - Muscle pain
+      - Headache
+      - Sore throat
+      - Loss of taste or smell
+      - Diarrhea
+      - Congestion or runny nose
+      - Nausea or vomiting
+      - Feeling feverish or measured temperature greater than or equal to 100.0 degrees Fahrenheit
+progress: 28.4      
+need: 
+  - screenee.name.last
+---
+question: Household Contact
+subquestion: |
+  Has anyone in your household been in contact with anyone who has exhibited any of the previous symptoms in the last 14 days?
+yesno: household_contact_with_symptoms
+progress: 42.6
+---
+question: Postive Testing
+subquestion: | 
+  Have you recently (preceding 14 days) been in close contact with anyone who has lab confirmed positive for COVID-19? 
+yesno: lab_test_positive
+progress: 56.8
+---
+question: Travel
+subquestion: | 
+  Have you, or anyone in your immediate family, recently traveled to a restricted area that is under a Level 2, 3, or 4 Travel Advisory according to the U.S. State Department? Including China, Italy, Iran, and most countries in Europe?
+yesno: travel_restriction
+progress: 71
