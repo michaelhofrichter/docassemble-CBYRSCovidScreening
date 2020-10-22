@@ -35,44 +35,53 @@ code: |
   todaystime = current_datetime().format_time('h:mm a z')  
   if len(symptoms.true_values()) != 0:
     visual_result = "red"
-    appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, "Blank", comma_and_list(symptoms.true_values()), "Blank", "Blank", "Blank", screenee.position, student.name.first, student.name.last]
+    appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, "Blank", comma_and_list(symptoms.true_values()), "Blank", "Blank", "Blank", screenee.position]
     the_task = background_action('bg_task')
   else:
     if household_contact_with_symptoms:
       visual_result = "red"
-      appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, "Blank", "None", household_contact_with_symptoms, "Blank", "Blank", screenee.position, student.name.first, student.name.last]
+      appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, "Blank", "None", household_contact_with_symptoms, "Blank", "Blank", screenee.position]
       the_task = background_action('bg_task')
     else:
       if lab_test_positive:
         visual_result = "red"
-        appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, "Blank", "None", household_contact_with_symptoms, lab_test_positive, "Blank", screenee.position, student.name.first, student.name.last]
+        appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, "Blank", "None", household_contact_with_symptoms, lab_test_positive, "Blank", screenee.position]
         the_task = background_action('bg_task')
       else:
         if travel_restriction:
           visual_result = "red"
-          appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, "Blank", "None", household_contact_with_symptoms, lab_test_positive, travel_restriction, screenee.position, student.name.first, student.name.last]
+          appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, "Blank", "None", household_contact_with_symptoms, lab_test_positive, travel_restriction, screenee.position]
           the_task = background_action('bg_task')
         else:
           if current_temperature == "high":
             visual_result = "red"
-            appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, temperature, "None", household_contact_with_symptoms, lab_test_positive, travel_restriction, screenee.position, student.name.first, student.name.last]
+            appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, temperature, "None", household_contact_with_symptoms, lab_test_positive, travel_restriction, screenee.position]
             the_task = background_action('bg_task')
           else:
             visual_result = "green"
-            appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, temperature, "None", household_contact_with_symptoms, lab_test_positive, travel_restriction, screenee.position, student.name.first, student.name.last]
+            appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, temperature, "None", household_contact_with_symptoms, lab_test_positive, travel_restriction, screenee.position]
             the_task = background_action('bg_task')
 ---
 code: | 
-  if temperature > 100.2:
-    current_temperature = "high"
-  else:
-    current_temperature = "low"
+  if screenee.position == "Parent":
+    if temperature > 100.2 or student.temperature > 100.2:
+      current_temperature = "high"
+    else:
+      current_temperature = "low"
+  else: 
+    if temperature > 100.2:
+      current_temperature = "high"
+    else:
+      current_temperature = "low"
 ---
 event: bg_task
 code: |
   # This is where time-consuming code
   # would go.
-  
+  if screenee.position == "Parent":
+    appending_data.append(student.name.first)
+    appending_data.append(student.name.last)
+    appending_data.append(student.temperature)
   append_to_sheet('CBY RS - COVID-19 Screening Responses from Docassemble', appending_data)
   data_stored_in_google_sheet = True
   
@@ -100,7 +109,7 @@ fields:
   - Staff, Student, or Parent: screenee.position
     choices: 
       - Staff
-      - Student
+      - Madrichim
       - Parent
   - Student First Name: student.name.first
     show if: 
@@ -112,6 +121,7 @@ fields:
       is: Parent
 progress: 14.2
 ---
+---
 question: | 
   Temperature
 fields: 
@@ -119,7 +129,16 @@ fields:
     datatype: number
     step: 0.1
     min: 95.0
-progress: 85.8
+progress: 80
+---
+question: | 
+  Temperature
+fields:
+  - Please record your student's temperature for the day in Fahrenheit: student.temperature
+    datatype: number
+    step: 0.1
+    min: 95.0
+progress: 90
 ---
 question: Results
 subquestion: |
