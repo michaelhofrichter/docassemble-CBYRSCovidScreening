@@ -17,6 +17,7 @@ features:
 code: |
   screenee.name
   if screenee.position == "Parent": 
+    household_contact_with_symptoms = False
     student_count = 1
   results
 comment: | 
