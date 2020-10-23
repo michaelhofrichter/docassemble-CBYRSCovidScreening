@@ -16,6 +16,8 @@ features:
 ---
 code: |
   screenee.name
+  if screenee.position == "Parent": 
+    student_count = 1
   results
 comment: | 
  '  'if the_task.ready():
@@ -70,6 +72,28 @@ code: |
               appending_data = [todaysdate, todaystime, screenee.name.first, screenee.name.last, visual_result, temperature, "None", household_contact_with_symptoms, lab_test_positive, awaiting_results, travel_restriction, screenee.position]
               the_task = background_action('bg_task')
 ---
+code: |
+  if screenee.position == "Parent":
+    you_vs_student_possessive = "has **" + str(student1.name) + "**"
+    you_vs_student_is = "Is **" + str(student1.name) + "**"
+  else:
+    you_vs_student_possessive = "have **you**"
+    you_vs_student_is = "Are **you**"
+---
+code: | 
+  if screenee.position == "Parent":
+    temperature = "n/a"
+    if student1.temperature > 100.2:
+      current_temperature = "high"
+    else: 
+      current_temperature = "low"
+  else:
+    if temperature > 100.2:
+      current_temperature = "high"
+    else:
+      current_temperature = "low"
+---
+
 code: | 
   if screenee.position == "Parent":
     temperature = "N/A"
@@ -93,6 +117,7 @@ code: |
       current_temperature = "high"
     else:
       current_temperature = "low"
+sets: current_temperature
 ---
 event: bg_task
 code: |
@@ -139,6 +164,13 @@ fields:
       - Staff
       - Madrichim
       - Parent
+  - Student First Name: student1.name.first
+    js show if: 
+      val("screenee.position") == "Parent"
+  - Student Last Name: student1.name.last
+    js show if: 
+      val("screenee.position") == "Parent"
+comment: | 
   - How many students are you completing this form for?: student_count
     choices:
       - 1: 1
@@ -146,12 +178,6 @@ fields:
       - 3: 3
     js show if: | 
       val("screenee.position") == "Parent"
-  - Student First Name: student1.name.first
-    js show if: |
-      val("student_count") == "1" || val("student_count") == "2" || val("student_count") == "3"
-  - Student Last Name: student1.name.last
-    js show if: 
-      val("student_count") == "1" || val("student_count") == "2" || val("student_count") == "3"
   - Second Student First Name: student2.name.first
     js show if: 
       val("student_count") == "2" || val("student_count") == "3"
@@ -178,7 +204,7 @@ progress: 80
 question: | 
   Temperature
 fields:
-  - Please record ${ student1 }'s temperature for the day in Fahrenheit: student1.temperature
+  - Please record **${ student1 }**'s temperature for the day in Fahrenheit: student1.temperature
     datatype: number
     step: 0.1
     min: 95.0
@@ -187,7 +213,7 @@ progress: 90
 question: | 
   Temperature
 fields:
-  - Please record ${ student2 }'s temperature for the day in Fahrenheit: student2.temperature
+  - Please record **${ student2 }**'s temperature for the day in Fahrenheit: student2.temperature
     datatype: number
     step: 0.1
     min: 95.0
@@ -196,7 +222,7 @@ progress: 90
 question: | 
   Temperature
 fields:
-  - Please record ${ student3 }'s temperature for the day in Fahrenheit: student3.temperature
+  - Please record **${ student3 }'s** temperature for the day in Fahrenheit: student3.temperature
     datatype: number
     step: 0.1
     min: 95.0
@@ -263,7 +289,7 @@ progress: 95
 ---
 question: Symptoms
 subquestion: | 
-  In the past 24 hours, has anyone in your household experienced any of the following? Select all that apply. 
+  In the past 24 hours, ${ you_vs_student_possessive } experienced any of the following? Select all that apply. 
 fields:
   - no label: symptoms
     datatype: checkboxes
@@ -286,25 +312,24 @@ need:
 ---
 question: Household Contact
 subquestion: |
-  Has anyone in your household been in contact with anyone who has exhibited any of the previous symptoms in the last 14 days?
+  ${ capitalize(you_vs_student_possessive) } been in contact with anyone who has exhibited any of the previous symptoms in the last 14 days?
 yesno: household_contact_with_symptoms
 progress: 42.6
 ---
 question: Postive Testing
 subquestion: | 
-  Have you recently (preceding 14 days) been in close contact with anyone who has lab confirmed positive for COVID-19? 
+  ${ capitalize(you_vs_student_possessive) } recently (preceding 14 days) been in close contact with anyone who has lab confirmed positive for COVID-19? 
 yesno: lab_test_positive
 progress: 56.8
 ---
----
 question: Awaiting Testing Results
 subquestion: | 
-  Are you awaiting test results from a Covid-19 test? 
+  ${ capitalize(you_vs_student_is) } awaiting test results from a Covid-19 test? 
 yesno: awaiting_results
 progress: 63
 ---
 question: Travel
 subquestion: | 
-  Have you, or anyone in your immediate family, recently traveled to a restricted area that is under a Level 2, 3, or 4 Travel Advisory according to the U.S. State Department? Including China, Italy, Iran, and most countries in Europe?
+  ${ capitalize(you_vs_student_possessive) }, or anyone in your immediate family, recently traveled to a restricted area that is under a Level 2, 3, or 4 Travel Advisory according to the U.S. State Department? Including China, Italy, Iran, and most countries in Europe?
 yesno: travel_restriction
 progress: 71
