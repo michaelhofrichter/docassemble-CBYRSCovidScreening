@@ -14,10 +14,35 @@ features:
   progress bar: true
   progress bar multiplier: .125
 ---
+code: | 
+
+  if get_config('external hostname') == 'interviews.bethyeshurun.org':
+    google_sheet_destination = 'CBY RS - COVID-19 Screening Responses from Docassemble'
+  else:
+    google_sheet_destination = 'COVID-19 Health Attestation Form (Responses)'
+  high_temperature_cutoff = 100.2
+  organization_wanting_the_screening = 'William S. Malev Schools for Religious Studies of Congregation Beth Yeshurun'
+  position_names = ['Parent', 'Student', 'Madrichim']
+  parents_also_get_question_about_symptom_contact = False
+---
+images: 
+  logo_to_use: logo_cropped.jpg
+---
+image sets:
+  emojione:
+    attribution: |
+      Icon made by
+      [Emoji One](https://commons.wikimedia.org/wiki/File:Eo_circle_red_letter-x.svg)
+    images:
+      red_x: Eo_circle_red_letter-x.svg
+      green_check: GreenCheckmark.svg
+---
 code: |
   screenee.name
+  
   if screenee.position == "Parent": 
-    household_contact_with_symptoms = False
+    if not parents_also_get_question_about_symptom_contact: 
+      household_contact_with_symptoms = False
     student_count = 1
   results
 comment: | 
@@ -84,12 +109,12 @@ code: |
 code: | 
   if screenee.position == "Parent":
     temperature = "n/a"
-    if student1.temperature > 100.2:
+    if student1.temperature > high_temperature_cutoff:
       current_temperature = "high"
     else: 
       current_temperature = "low"
   else:
-    if temperature > 100.2:
+    if temperature > high_temperature_cutoff:
       current_temperature = "high"
     else:
       current_temperature = "low"
@@ -99,22 +124,22 @@ code: |
   if screenee.position == "Parent":
     temperature = "N/A"
     if student_count == "1": 
-      if student1.temperature > 100.2:
+      if student1.temperature > high_temperature_cutoff:
         current_temperature = "high"
       else:
         current_temperature = "low"
     elif student_count == "2": 
-      if student1.temperature > 100.2 or student2.temperature > 100.2:
+      if student1.temperature > high_temperature_cutoff or student2.temperature > high_temperature_cutoff:
         current_temperature = "high"
       else:
         current_temperature = "low"
     elif student_count == "3":
-      if student1.temperature > 100.2 or student2.temperature > 100.2 or student3.temperature > 100.2:
+      if student1.temperature > high_temperature_cutoff or student2.temperature > high_temperature_cutoff or student3.temperature > high_temperature_cutoff:
         current_temperature = "high"
       else:
         current_temperature = "low"
   else: 
-    if temperature > 100.2:
+    if temperature > high_temperature_cutoff:
       current_temperature = "high"
     else:
       current_temperature = "low"
@@ -136,35 +161,20 @@ code: |
       appending_data.append(student3.name.first)
       appending_data.append(student3.name.last)
       appending_data.append(student3.temperature)
-  append_to_sheet('CBY RS - COVID-19 Screening Responses from Docassemble', appending_data)
+  # append_to_sheet(google_sheet_destination, appending_data)
   data_stored_in_google_sheet = True
-  
 ---
-image sets:
-  emojione:
-    attribution: |
-      Icon made by
-      [Emoji One](https://commons.wikimedia.org/wiki/File:Eo_circle_red_letter-x.svg)
-    images:
-      red_x: Eo_circle_red_letter-x.svg
-      green_check: GreenCheckmark.svg
----
-images: 
-  malev: logo_cropped.jpg
----
-decoration: malev
+decoration: logo_to_use
 question: |
-  William S. Malev Schools for Religious Studies of Congregation Beth Yeshurun
+  ${ organization_wanting_the_screening } 
 subquestion: | 
   ## COVID-19 Health Attestation Form
 fields:
   - First Name: screenee.name.first
   - Last Name: screenee.name.last
   - Staff, Student, or Parent: screenee.position
-    choices: 
-      - Staff
-      - Madrichim
-      - Parent
+    code: |
+      position_names
   - Student First Name: student1.name.first
     js show if: 
       val("screenee.position") == "Parent"

@@ -43,9 +43,9 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.CBYRSCovidScreening',
-      version='0.0.11',
-      description=('A docassemble extension.'),
-      long_description='Covid Screening Tool for attendance at RS. \r\n\r\nversion 0.8 includes up to 3 kids. \r\nversion 0.9 needs some cleanup, but works.\r\n',
+      version='0.0.12',
+      description=('Covid-19 Screening tool via Docassemble'),
+      long_description='Covid Screening Tool for attendance at RS. \r\n\r\nversion 0.8 includes up to 3 kids. \r\nversion 0.9 needs some cleanup, but works.\r\nversion 0.12 parameterized much of it. Need to still re-work the options for multiple kids.\r\n',
       long_description_content_type='text/markdown',
       author='Michael Hofrichter',
       author_email='michael.hofrichter@gmail.com',
